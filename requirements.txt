@@ -1,0 +1,48 @@
+# QRNG Project Dependencies
+# Python 3.10+ required
+# Install: pip install -r requirements.txt
+
+# Quantum computing
+qiskit==1.2.4
+qiskit-aer==0.15.1
+
+# Optional: IBM Quantum hardware (install separately if needed)
+# qiskit-ibm-runtime>=0.20.0
+
+# Web framework
+fastapi==0.141.1
+uvicorn==0.52.4
+python-multipart==0.0.32
+
+# Data validation
+pydantic==2.13.5
+pydantic-settings==2.15.0
+
+# Database
+sqlalchemy==2.0.52
+
+# Scientific computing
+numpy==2.2.6
+scipy>=1.15.0
+pandas>=2.3.0
+
+# Visualization
+matplotlib>=3.10.0
+plotly>=7.1.0
+
+# Frontend
+streamlit>=1.65.0
+
+# Reports
+reportlab>=5.0.0
+
+# HTTP client (for frontend & tests)
+httpx>=0.28.0
+requests>=2.34.0
+
+# Testing
+pytest>=9.1.0
+pytest-asyncio>=1.4.0
+
+# Configuration
+python-dotenv>=1.2.0
