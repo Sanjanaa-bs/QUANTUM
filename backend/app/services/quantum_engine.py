@@ -19,6 +19,7 @@ Supported modes:
 
 import logging
 import math
+import secrets
 import time
 import uuid
 from typing import Optional, Dict, Any, Tuple, List
@@ -203,6 +204,8 @@ def run_ideal_simulation(
     simulator_options: Dict[str, Any] = {"shots": shots, "memory": True}
     if seed is not None:
         simulator_options["seed_simulator"] = seed
+    else:
+        simulator_options["seed_simulator"] = secrets.randbits(31)
 
     t0 = time.perf_counter()
     job = simulator.run(qc, **simulator_options)
@@ -223,16 +226,15 @@ def run_ideal_simulation(
             bitstream = "".join(ordered_shots)[:num_bits]
     except Exception:
         bitstream = _counts_to_bitstream(normalized, target_bits=num_bits)
+        warnings.append(
+            "Aggregated counts fallback used. Shot chronological order could not be retrieved."
+        )
     stats = _compute_stats(bitstream)
 
     if seed is not None:
         warnings.append(
             "Seeded simulation: reproducible but NOT random in the cryptographic sense."
         )
-    warnings.append(
-        "Aggregated counts do not preserve chronological shot order. "
-        "Bits are reconstructed in ascending key order for determinism."
-    )
     if num_qubits > 1:
         warnings.append(
             f"Multi-qubit mode ({num_qubits} qubits): simulated via joint statevector pseudo-random sampling. "
@@ -305,6 +307,8 @@ def run_noisy_simulation(
     simulator_options: Dict[str, Any] = {"shots": shots, "memory": True}
     if seed is not None:
         simulator_options["seed_simulator"] = seed
+    else:
+        simulator_options["seed_simulator"] = secrets.randbits(31)
 
     t0 = time.perf_counter()
     job = simulator.run(qc, **simulator_options)
@@ -325,14 +329,14 @@ def run_noisy_simulation(
             bitstream = "".join(ordered_shots)[:num_bits]
     except Exception:
         bitstream = _counts_to_bitstream(normalized, target_bits=num_bits)
+        warnings.append(
+            "Aggregated counts fallback used. Shot chronological order could not be retrieved."
+        )
     stats = _compute_stats(bitstream)
 
     warnings.append(
         "SIMULATION (Noisy): Readout-error model introduces asymmetry. "
         "This is NOT physical quantum hardware."
-    )
-    warnings.append(
-        "Aggregated counts do not preserve chronological shot order."
     )
     if num_qubits > 1:
         warnings.append(

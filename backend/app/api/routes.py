@@ -723,6 +723,7 @@ def run_noise_sweep_endpoint(body: NoiseSweepRequest):
             num_bits=body.num_bits,
             seed=body.seed,
             alpha=body.significance_level,
+            asymmetry_ratio=body.asymmetry_ratio,
         )
         return NoiseSweepResponse(**res)
     except Exception as exc:

@@ -45,22 +45,22 @@ class TestOutcome(str, Enum):
 
 
 class ReadoutErrorConfig(BaseModel):
-    """Configuration for a simple readout-error noise model."""
+    """Configuration for a readout-error noise model."""
     prob_meas0_prep1: float = Field(
-        default=0.05,
+        default=0.08,
         ge=0.0,
         le=1.0,
-        description="Probability of measuring 0 when qubit is in |1⟩ (bit-flip on 1)"
+        description="Probability of measuring 0 when qubit is in |1⟩ (relaxation bit-flip on 1)"
     )
     prob_meas1_prep0: float = Field(
-        default=0.05,
+        default=0.01,
         ge=0.0,
         le=1.0,
-        description="Probability of measuring 1 when qubit is in |0⟩ (bit-flip on 0)"
+        description="Probability of measuring 1 when qubit is in |0⟩ (thermal excitation bit-flip on 0)"
     )
 
     model_config = {"json_schema_extra": {
-        "example": {"prob_meas0_prep1": 0.05, "prob_meas1_prep0": 0.05}
+        "example": {"prob_meas0_prep1": 0.08, "prob_meas1_prep0": 0.01}
     }}
 
 
@@ -378,6 +378,12 @@ class NoiseSweepRequest(BaseModel):
     num_bits: int = Field(default=5000, ge=500, le=50000, description="Bits per noise point")
     seed: Optional[int] = Field(default=None, description="Optional reproducible base seed")
     significance_level: float = Field(default=0.01, ge=0.001, le=0.1)
+    asymmetry_ratio: float = Field(
+        default=0.15,
+        ge=0.0,
+        le=1.0,
+        description="Asymmetry ratio P(1|0)/P(0|1) representing cryogenic thermal excitation relative to T1 relaxation"
+    )
 
 
 class NoiseSweepResponse(BaseModel):

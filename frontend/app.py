@@ -294,13 +294,15 @@ elif page == "⚡ Generate Bits":
         noise_params = {}
         if source_type == "noisy_simulator":
             st.markdown("**Readout Error Configuration**")
-            p01 = st.slider("P(measure 0 | qubit in |1⟩)", 0.0, 0.5, 0.05, 0.01)
-            p10 = st.slider("P(measure 1 | qubit in |0⟩)", 0.0, 0.5, 0.05, 0.01)
+            p01 = st.slider("P(measure 0 | qubit in |1⟩)", 0.0, 0.5, 0.08, 0.01)
+            p10 = st.slider("P(measure 1 | qubit in |0⟩)", 0.0, 0.5, 0.01, 0.01)
             noise_params = {"prob_meas0_prep1": p01, "prob_meas1_prep0": p10}
             st.markdown("""
             <div class="info-box">
-            This simplified readout-error model does <b>NOT</b> reproduce any specific 
-            real quantum device. It is a configurable approximation for study purposes.
+            <b>Physical Asymmetric Noise:</b> Superconducting qubits exhibit energy relaxation ($T_1$) 
+            where $|1\\rangle \\to |0\\rangle$ occurs more frequently than thermal excitation ($|0\\rangle \\to |1\\rangle$) 
+            at cryogenic temperatures ($P(0|1) > P(1|0)$). This creates realistic bit bias, which can then 
+            be removed using Von Neumann debiasing.
             </div>""", unsafe_allow_html=True)
         else:
             st.markdown("""
@@ -1079,14 +1081,14 @@ elif page == "📄 Reports & Help":
             else:
                 ns_levels = ns_levels_opts[ns_preset]
             ns_bits = st.slider("Bits per Level", 500, 10000, 2000, 500, key="ns_bits")
-            ns_seed = st.number_input("Seed (0 = random)", min_value=0, max_value=99999, value=42, key="ns_seed")
+            ns_seed = st.number_input("Seed (0 = random)", min_value=0, max_value=99999, value=0, key="ns_seed")
 
         with ns_col2:
             if st.button("🌊 Run Noise Sweep", type="primary", key="btn_noise"):
                 payload_ns = {
                     "noise_levels": ns_levels,
                     "num_bits": ns_bits,
-                    "seed": int(ns_seed) if ns_seed else None,
+                    "seed": int(ns_seed) if ns_seed > 0 else None,
                 }
                 with st.spinner(f"Running noise sweep across {len(ns_levels)} levels…"):
                     ns_res = api_post("/experiments/noise-sweep", payload_ns)

@@ -5,8 +5,9 @@ Performs automated noise sweeps using Qiskit Aer simulation with
 configurable readout-error probabilities.
 
 For each noise level:
-  - Runs actual quantum simulation with symmetric readout error:
-    P(meas 0 | prep 1) = noise_level, P(meas 1 | prep 0) = noise_level.
+  - Runs actual quantum simulation with asymmetric readout error:
+    P(meas 0 | prep 1) = noise_level (energy relaxation T1 decay |1⟩ → |0⟩),
+    P(meas 1 | prep 0) = round(noise_level * asymmetry_ratio, 4) (cryogenic thermal excitation |0⟩ → |1⟩).
   - Computes observed bit bias, Shannon entropy, empirical min-entropy.
   - Applies Von Neumann debiasing to the actual generated bitstream.
   - Measures extraction efficiency (output_to_input_ratio & pair_retention_ratio).
@@ -34,6 +35,7 @@ def run_noise_sweep(
     num_bits: int = 5000,
     seed: Optional[int] = None,
     alpha: float = 0.01,
+    asymmetry_ratio: float = 0.15,
 ) -> Dict[str, Any]:
     """
     Execute an automated noise sweep across specified noise levels.
@@ -43,6 +45,8 @@ def run_noise_sweep(
         num_bits: Number of bits per simulation run (between 500 and 50,000).
         seed: Optional base seed for reproducibility.
         alpha: Significance level for statistical tests.
+        asymmetry_ratio: Ratio P(meas 1 | prep 0) / P(meas 0 | prep 1), reflecting physical
+            thermal excitation relative to T1 relaxation (default 0.15).
 
     Returns:
         Structured sweep result containing points for each noise level,
@@ -60,6 +64,7 @@ def run_noise_sweep(
     clean_levels.sort()
 
     num_bits = max(500, min(50000, int(num_bits)))
+    asymmetry_ratio = max(0.0, min(1.0, float(asymmetry_ratio)))
     t_start = time.perf_counter()
     points: List[Dict[str, Any]] = []
 
@@ -73,7 +78,7 @@ def run_noise_sweep(
             sim_result = run_noisy_simulation(
                 num_bits=num_bits,
                 prob_meas0_prep1=lvl,
-                prob_meas1_prep0=lvl,
+                prob_meas1_prep0=round(lvl * asymmetry_ratio, 4),
                 seed=run_seed,
             )
 
@@ -159,10 +164,10 @@ def run_noise_sweep(
         "noise_levels_tested": clean_levels,
         "points": points,
         "scientific_summary": (
-            "Higher readout error increases bit bias away from 0.5, reducing both Shannon entropy "
-            "and min-entropy in the raw stream. While Von Neumann debiasing successfully restores "
-            "the output proportion to ~0.5 and entropy to ~1.0, it suffers a steep decline in extraction "
-            "efficiency as more pairs match (00 and 11) and must be discarded."
+            "Higher readout error increases bit bias away from 0.5 due to physical asymmetric qubit relaxation "
+            "(P(0|1) > P(1|0)), reducing both Shannon entropy and min-entropy in the raw stream. While Von Neumann "
+            "debiasing successfully restores the output proportion to ~0.5 and entropy to ~1.0, it suffers a steep "
+            "decline in extraction efficiency as more pairs match (predominantly 00) and must be discarded."
         ),
     }
 

@@ -89,8 +89,8 @@ def run_batch_evaluation(
             sim = run_noisy_simulation(
                 num_bits=bits_per_sequence,
                 num_qubits=num_qubits,
-                prob_meas0_prep1=0.05,
-                prob_meas1_prep0=0.05,
+                prob_meas0_prep1=0.08,
+                prob_meas1_prep0=0.01,
                 seed=seq_seed,
             )
         else:
