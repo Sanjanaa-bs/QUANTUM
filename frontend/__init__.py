@@ -1,0 +1,3 @@
+"""
+QRNG Streamlit Frontend Package
+"""

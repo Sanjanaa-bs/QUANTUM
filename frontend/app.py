@@ -8,8 +8,19 @@ No hardcoded demonstration results in production views.
 """
 
 import json
+import os
+import sys
 import time
 from typing import Any, Dict, List, Optional
+
+# Ensure project root and frontend directories are on sys.path
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+FRONTEND_DIR = os.path.dirname(__file__)
+if FRONTEND_DIR not in sys.path:
+    sys.path.insert(0, FRONTEND_DIR)
 
 import numpy as np
 import pandas as pd
@@ -17,12 +28,21 @@ import plotly.graph_objects as go
 import plotly.express as px
 import streamlit as st
 
-from frontend.components import (
-    GLOBAL_CSS, API_BASE,
-    api_get, api_post, api_get_bytes,
-    source_badge_html, outcome_badge_html, format_bits_preview,
-    PALETTE, get_plotly_layout,
-)
+try:
+    from frontend.components import (
+        GLOBAL_CSS, API_BASE,
+        api_get, api_post, api_get_bytes,
+        source_badge_html, outcome_badge_html, format_bits_preview,
+        PALETTE, get_plotly_layout,
+    )
+except ModuleNotFoundError:
+    from components import (
+        GLOBAL_CSS, API_BASE,
+        api_get, api_post, api_get_bytes,
+        source_badge_html, outcome_badge_html, format_bits_preview,
+        PALETTE, get_plotly_layout,
+    )
+
 from backend.app.services.entropy_analyzer import calculate_sliding_window_proportions
 
 # ─────────────────────────────────────────────
