@@ -601,8 +601,8 @@ elif page == "📊 Bitstream Analysis":
             comp = ea_res.get("debiased_comparison")
 
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Shannon H (raw)", f"{profile.get('shannon_entropy', 0):.6f}")
-            m2.metric("H_min (raw)", f"{profile.get('min_entropy', 0):.6f}")
+            m1.metric("Shannon H (raw)", f"{profile.get('shannon_entropy_per_bit', 0):.6f}")
+            m2.metric("H_min (raw)", f"{profile.get('min_entropy_per_bit', 0):.6f}")
             m3.metric("Proportion 0s", f"{profile.get('proportion_zeros', 0):.4f}")
             m4.metric("Proportion 1s", f"{profile.get('proportion_ones', 0):.4f}")
 
@@ -629,27 +629,37 @@ elif page == "📊 Bitstream Analysis":
                 ea_layout["yaxis"]["title"] = "Entropy (bits/symbol)"
                 fig_ea.update_layout(**ea_layout)
                 st.plotly_chart(fig_ea, use_container_width=True)
+                summ = wa.get("summary", {})
                 st.caption(
                     f"Num windows: {wa.get('num_windows', 0)} | "
-                    f"Mean H: {wa.get('mean_shannon_entropy', 0):.4f} | "
-                    f"Std H: {wa.get('std_shannon_entropy', 0):.4f} | "
-                    f"Mean H_min: {wa.get('mean_min_entropy', 0):.4f}"
+                    f"Mean H: {summ.get('mean_shannon', 0):.4f} | "
+                    f"Std H: {summ.get('std_shannon', 0):.4f} | "
+                    f"Mean H_min: {summ.get('mean_min_entropy', 0):.4f}"
                 )
 
             if comp:
                 st.markdown("#### Raw vs. Debiased Entropy Comparison")
+                raw = comp.get("raw", {})
+                deb = comp.get("debiased", {})
+                raw_total = raw.get("total_bits", 0)
+                deb_total = deb.get("total_bits", 0)
+                ratio = (deb_total / raw_total) if raw_total > 0 else 0.0
                 comp_df = pd.DataFrame([
-                    {"Stream": "Raw Input", "Shannon H": f"{comp.get('raw_shannon_entropy', 0):.6f}",
-                     "Min-Entropy": f"{comp.get('raw_min_entropy', 0):.6f}",
-                     "Total Bits": f"{comp.get('raw_bits', 0):,}"},
-                    {"Stream": "Debiased Output", "Shannon H": f"{comp.get('debiased_shannon_entropy', 0):.6f}",
-                     "Min-Entropy": f"{comp.get('debiased_min_entropy', 0):.6f}",
-                     "Total Bits": f"{comp.get('debiased_bits', 0):,}"},
+                    {"Stream": "Raw Input", "Shannon H": f"{raw.get('shannon_entropy_per_bit', 0):.6f}",
+                     "Min-Entropy": f"{raw.get('min_entropy_per_bit', 0):.6f}",
+                     "Total Bits": f"{raw_total:,}"},
+                    {"Stream": "Debiased Output", "Shannon H": f"{deb.get('shannon_entropy_per_bit', 0):.6f}",
+                     "Min-Entropy": f"{deb.get('min_entropy_per_bit', 0):.6f}",
+                     "Total Bits": f"{deb_total:,}"},
                 ])
                 st.dataframe(comp_df, hide_index=True, use_container_width=True)
                 st.caption(
-                    f"Output-to-input ratio: {comp.get('output_to_input_ratio', 0):.4f} "
-                    f"({comp.get('output_to_input_ratio', 0)*100:.2f}%)"
+                    f"Output-to-input ratio: {ratio:.4f} "
+                    f"({ratio*100:.2f}%)"
+                )
+                st.caption(
+                    f"Bias reduction: {comp.get('bias_reduction', 0):.4f} | "
+                    f"Min-entropy gain: {comp.get('min_entropy_gain', 0):.4f}"
                 )
     elif ea_state and ea_state[0] == eid and "_error" in ea_state[1]:
         st.error(f"Entropy analysis failed: {ea_state[1]['_error']}")
