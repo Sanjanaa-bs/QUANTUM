@@ -226,25 +226,38 @@ if page == "🏠 Overview":
     cv_data = _sget("circuit_viz")
     if cv_data and "_error" not in cv_data:
         with cv_col2:
-            st.markdown(f"**{cv_data.get('circuit_name', 'Hadamard Circuit')}** — {cv_data.get('description', '')}")
+            circuit_title = cv_data.get("circuit_name", f"{cv_data.get('num_qubits', viz_qubits)}-Qubit Hadamard Register")
+            circuit_desc = cv_data.get("explanation", cv_data.get("description", ""))
+            st.markdown(f"**{circuit_title}** — {circuit_desc}")
             stages = cv_data.get("stages", [])
             if stages:
-                tabs_stage = st.tabs([s["stage_name"] for s in stages])
+                tab_labels = [s.get("title", s.get("stage_name", f"Stage {i+1}")) for i, s in enumerate(stages)]
+                tabs_stage = st.tabs(tab_labels)
                 for i, s in enumerate(stages):
                     with tabs_stage[i]:
-                        st.markdown(f"**{s['stage_name']}**")
-                        st.info(s.get("description", ""))
+                        stage_title = s.get("title", s.get("stage_name", f"Stage {i+1}"))
+                        st.markdown(f"**{stage_title}**")
+                        if s.get("description"):
+                            st.info(s["description"])
+                        if s.get("math_formula"):
+                            st.latex(s["math_formula"])
+                        elif s.get("math_note"):
+                            st.caption(s["math_note"])
+                        if s.get("matrix_dimension"):
+                            st.caption(f"Operator dimension: {s['matrix_dimension']}")
                         if s.get("state_vector"):
                             st.code(s["state_vector"], language="text")
                         if s.get("probabilities"):
                             prob = s["probabilities"]
-                            probs_text = "  |  ".join([f"P({k}) = {v:.4f}" for k, v in prob.items()])
+                            probs_text = "  |  ".join([
+                                f"P({k}) = {v:.4f}" if isinstance(v, (int, float)) else f"P({k}) = {v}"
+                                for k, v in prob.items()
+                            ])
                             st.markdown(f"**Measurement Probabilities:** {probs_text}")
-                        if s.get("math_note"):
-                            st.caption(s["math_note"])
-            if cv_data.get("circuit_diagram"):
+            diagram = cv_data.get("circuit_ascii", cv_data.get("circuit_diagram", ""))
+            if diagram:
                 st.markdown("**Qiskit Circuit Diagram:**")
-                st.code(cv_data["circuit_diagram"], language="text")
+                st.code(diagram, language="text")
             if cv_data.get("num_qubits"):
                 st.caption(
                     f"Circuit: {cv_data['num_qubits']}-qubit Hadamard layer. "
